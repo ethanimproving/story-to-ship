@@ -39,7 +39,11 @@ or add to your project's `opencode.json`:
 }
 ```
 
-OpenCode resolves the `opencode.json` manifest at the repository root and loads `index.js`. The same 33 skills and 16 agents ship as `Skill` tool definitions (via `skill()`), so every gate works identically in both runtimes. The hook-enforced enforcement (Iron Laws injection, bootstrap gate) is Claude Code only; in OpenCode the skills' own hard-stop language carries the enforcement.
+OpenCode resolves the package manifest and loads `opencode/plugin.ts`. The plugin adds the bundled
+`skills/` directory to OpenCode's skill search paths, so the same skills are available through the
+native `skill` tool without copying them manually. Claude Code agents remain Claude-specific. The
+hook adapter also maps the supported Claude lifecycle hooks onto OpenCode plugin events; hooks
+without an OpenCode equivalent remain Claude Code-only.
 
 ## Skills by Phase
 

@@ -28,11 +28,14 @@
 import { spawn } from "node:child_process"
 import path from "node:path"
 import fs from "node:fs"
+import { fileURLToPath } from "node:url"
 
 // The plugin file lives in <repo>/opencode/; hook scripts live in <repo>/hooks/.
 // Resolved dynamically so the plugin works from a git checkout, an npm
 // package, or a copied plugin directory alike.
-const HOOKS_DIR = path.resolve(path.dirname(new URL(import.meta.url).pathname), "..", "hooks")
+const PLUGIN_DIR = path.dirname(fileURLToPath(import.meta.url))
+const HOOKS_DIR = path.resolve(PLUGIN_DIR, "..", "hooks")
+const SKILLS_DIR = path.resolve(PLUGIN_DIR, "..", "skills")
 
 const HOOK_TIMEOUT_MS = 10_000
 
@@ -138,6 +141,14 @@ export const StoryToShip = async (ctx: {
   const env: Record<string, string> = { CLAUDE_PROJECT_DIR: stateDir, BOOTSTRAP_GATE_STATE_DIR: stateDir }
 
   return {
+    config: async (config: any) => {
+      config.skills ??= {}
+      config.skills.paths ??= []
+      if (!config.skills.paths.includes(SKILLS_DIR)) {
+        config.skills.paths.push(SKILLS_DIR)
+      }
+    },
+
     "session.created": async (_input: any, output: any) => {
       // Claude SessionStart: re-grounding banner + bootstrap-pending flag.
       const out = await runHook("session-start.sh", { source: "startup" }, env)
