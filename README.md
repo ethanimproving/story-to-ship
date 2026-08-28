@@ -47,6 +47,7 @@ OpenCode resolves the `opencode.json` manifest at the repository root and loads 
 | Skill | Purpose |
 |-------|---------|
 | `honesty` | Evidence gate -- bans unverified completion claims, enforces inline verification |
+| `communication` | Plain-language gate -- defines jargon in user-facing text, treats hedged agreement as unclear writing not approval, keeps reasoning terse, requires evidence before conceding to a correction, and keeps public PR/issue review comments factual and neutral in tone |
 | `verification-before-completion` | Hard stop before any "done" claim |
 
 ### Requirements and Discovery
@@ -142,15 +143,19 @@ OpenCode resolves the `opencode.json` manifest at the repository root and loads 
 ## How It Works
 
 Installing this plugin adds:
-- 33 skills to `.claude/skills/` (Claude Code) or as `Skill` tool definitions (OpenCode) -- invoked via the `Skill` tool or loaded on demand
-- 16 agents to `.claude/agents/` (Claude Code only; OpenCode has no agent-dispatch tool in the plugin API yet)
+- 35 skills to `.claude/skills/` -- invoked via the `Skill` tool or loaded on demand
+- 16 agents to `.claude/agents/` -- dispatched via the `Agent` tool
 - Hooks from `hooks/hooks.json` (the shipped plugin wiring), registering four events: `SessionStart` (injects the Honesty Gate and Iron Laws at every startup), `UserPromptSubmit` (active per-turn enforcement), and `PreToolUse`/`PostToolUse` (bootstrap-gate and workflow-model-guard checks)
 
 Skills load on demand. The hooks enforce behavioral standards across all sessions without injecting all skill content at startup. The Iron Laws -- TDD gate, evidence gate, root-cause gate, ceremony gates -- are always active. This repo's own dogfood config, `.claude/settings.json`, additionally registers a `Stop` hook that logs each turn.
 
 ### OpenCode adapter
 
-The repository doubles as an OpenCode plugin. `opencode.json` at the root declares the package (name, version, and a `runtime` field that satisfies OpenCode's `runtime`-or-`main` validation). `index.js` loads every `skills/<name>/SKILL.md`, strips the YAML frontmatter, and registers each as an OpenCode `skill()` tool whose description and instructions are sourced from the same files Claude Code uses, so both runtimes share one skill corpus. Claude-specific paths (`.claude/...`) in skill bodies are rewritten to OpenCode paths (`.opencode/...`) at load time. The `hooks/` system is not available in the OpenCode plugin API, so hook-only enforcement is Claude Code only.
+The repository doubles as an OpenCode plugin. The plugin manifest loads `opencode/plugin.ts`, which
+adds the bundled `skills/` directory to OpenCode's skill search paths so the skills are available
+through the native `skill` tool without copying them manually. Claude-specific paths and agents
+remain Claude Code-only. The adapter maps supported Claude lifecycle hooks onto OpenCode plugin
+events; hook behavior without an OpenCode equivalent remains Claude Code-only.
 
 ## Repository Layout
 
