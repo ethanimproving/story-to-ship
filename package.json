@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "description": "story-to-ship: Claude Code skills + hooks for the full SDLC lifecycle, with OpenCode plugin support.",
   "type": "module",
+  "main": "./opencode/plugin.ts",
   "license": "MIT",
   "files": [
     "opencode/",
